@@ -7,95 +7,9 @@ import {
   ShieldCheck,
   Users,
 } from "./icons";
-import type { Client, NavItem, Service } from "./types";
+import type { NavItem } from "./types";
 
-export const clients: Client[] = [
-  {
-    id: 1,
-    name: "Maya Srinivas",
-    company: "Northstar Labs",
-    email: "maya@northstar.io",
-    phone: "+91 98765 44120",
-    initials: "NL",
-  },
-  {
-    id: 2,
-    name: "Arjun Mehta",
-    company: "BluePeak Systems",
-    email: "arjun@bluepeak.co",
-    phone: "+91 99881 20447",
-    initials: "BS",
-  },
-  {
-    id: 3,
-    name: "Leah Carter",
-    company: "Atlas Retail",
-    email: "leah@atlasretail.com",
-    phone: "+1 415 220 8301",
-    initials: "AR",
-  },
-  {
-    id: 4,
-    name: "Rahul Iyer",
-    company: "Nimbus Works",
-    email: "rahul@nimbus.dev",
-    phone: "+91 90210 77331",
-    initials: "NW",
-  },
-];
 
-export const services: Service[] = [
-  {
-    id: 1,
-    name: "northstar.io",
-    client: clients[0],
-    type: "Domain",
-    expires: "Jun 28, 2026",
-    daysLeft: 12,
-    status: "Expiring Soon",
-    cost: "$29.00",
-  },
-  {
-    id: 2,
-    name: "BluePeak Cloud VPS",
-    client: clients[1],
-    type: "VPS",
-    expires: "Jul 18, 2026",
-    daysLeft: 32,
-    status: "Active",
-    cost: "$149.00",
-  },
-  {
-    id: 3,
-    name: "atlasretail.com SSL",
-    client: clients[2],
-    type: "SSL",
-    expires: "Jun 08, 2026",
-    daysLeft: -8,
-    status: "Expired",
-    cost: "$89.00",
-  },
-  {
-    id: 4,
-    name: "Nimbus Managed Hosting",
-    client: clients[3],
-    type: "Hosting",
-    expires: "Jun 24, 2026",
-    daysLeft: 8,
-    status: "Expiring Soon",
-    cost: "$99.00",
-  },
-  {
-    id: 5,
-    name: "portal.bluepeak.co",
-    client: clients[1],
-    type: "Domain",
-    expires: "Aug 11, 2026",
-    daysLeft: 56,
-    status: "Active",
-    cost: "$35.00",
-  },
-];
 
 export const navItems: NavItem[] = [
   { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },

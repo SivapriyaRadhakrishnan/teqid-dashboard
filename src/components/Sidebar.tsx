@@ -1,5 +1,4 @@
 import { NavLink } from "react-router-dom";
-import { HelpCard } from "./HelpCard";
 import { useAuth } from "../context/AuthContext";
 import type { NavItem } from "../types";
 
@@ -53,9 +52,7 @@ export function Sidebar({ navItems }: SidebarProps) {
         </div>
       </nav>
 
-      <div className="mt-auto">
-        <HelpCard />
-      </div>
+     
     </aside>
   );
 }

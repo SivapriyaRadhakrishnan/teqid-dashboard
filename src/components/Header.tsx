@@ -4,12 +4,19 @@ import { Bell } from "../icons";
 import { useAuth } from "../context/AuthContext";
 import type { Page } from "../types";
 import { SearchBar } from "./SearchBar";
+import { supabase } from "../lib/supabase";
 
 export function Header({ activePage }: { activePage: Page }) {
   const [open, setOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+
   const adminEmail = user?.email ?? "admin@teqid.com";
   const initial = adminEmail.charAt(0).toUpperCase();
 
@@ -19,40 +26,136 @@ export function Header({ activePage }: { activePage: Page }) {
     navigate("/login", { replace: true });
   }
 
+  async function loadNotifications() {
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error) {
+      setNotifications(data || []);
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("notifications-channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+        },
+        () => {
+          loadNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !dropdownRef.current.contains(target)
       ) {
         setOpen(false);
+      }
+
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(target)
+      ) {
+        setNotificationsOpen(false);
       }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
     };
   }, []);
 
   return (
     <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-[rgba(15,23,42,0.07)] bg-surface-page/90 px-10 backdrop-blur">
       <div className="flex items-center gap-2 text-sm">
-        <span className="font-semibold text-text-primary">Teqid</span>
+        <span className="font-semibold text-text-primary">
+          Teqid
+        </span>
         <span className="text-text-muted">&gt;</span>
-        <span className="text-text-secondary">{activePage}</span>
+        <span className="text-text-secondary">
+          {activePage}
+        </span>
       </div>
 
       <div className="flex items-center gap-3">
         <SearchBar />
 
-        <button
-          className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[rgba(15,23,42,0.07)] bg-surface-card text-text-secondary shadow-soft transition hover:text-text-primary hover:shadow-soft-hover"
-          type="button"
-        >
-          <Bell className="h-5 w-5" />
-        </button>
+        <div ref={notificationRef} className="relative">
+          <button
+            type="button"
+            onClick={() =>
+              setNotificationsOpen((prev) => !prev)
+            }
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[rgba(15,23,42,0.07)] bg-surface-card text-text-secondary shadow-soft transition hover:text-text-primary hover:shadow-soft-hover"
+          >
+            <Bell className="h-5 w-5" />
+
+            {notifications.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {notifications.length}
+              </span>
+            )}
+          </button>
+
+          {notificationsOpen && (
+            <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+              <div className="border-b px-4 py-3">
+                <h3 className="font-semibold text-slate-900">
+                  Notifications
+                </h3>
+              </div>
+
+              <div className="max-h-80 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <p className="p-4 text-sm text-slate-500">
+                    No notifications available
+                  </p>
+                ) : (
+                  notifications.map((item) => (
+                    <div
+                      key={item.id}
+                      className="border-b px-4 py-3 hover:bg-slate-50"
+                    >
+                      <p className="text-sm font-medium text-slate-900">
+                        {item.title}
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.message}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div ref={dropdownRef} className="relative">
           <button
@@ -63,7 +166,8 @@ export function Header({ activePage }: { activePage: Page }) {
             <span
               className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
               style={{
-                background: "linear-gradient(135deg, #0EA5E9, #0369A1)",
+                background:
+                  "linear-gradient(135deg, #0EA5E9, #0369A1)",
               }}
             >
               {initial}
@@ -92,6 +196,7 @@ export function Header({ activePage }: { activePage: Page }) {
                     <p className="text-sm font-semibold text-slate-900">
                       Admin
                     </p>
+
                     <p className="text-xs text-slate-500">
                       {adminEmail}
                     </p>
