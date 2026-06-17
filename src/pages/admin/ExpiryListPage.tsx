@@ -1,22 +1,90 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ListFilter } from "../../icons";
-import { categoryOptions, services, statusOptions } from "../../data";
+import { categoryOptions, statusOptions } from "../../data";
 import { DataTable } from "../../components/DataTable";
 import { FilterChip } from "../../components/Filters";
 import { SearchBar } from "../../components/SearchBar";
-import type { Status } from "../../types";
 import { PageTitle } from "./PageTitle";
+import { supabase } from "../../lib/supabase";
+import type { Status } from "../../types";
 
 export function ExpiryListPage() {
+  const [services, setServices] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState("All Services");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  async function loadServices() {
+    const { data, error } = await supabase
+      .from("services")
+      .select(`
+        *,
+        clients (
+          client_name,
+          company_name,
+          email
+        )
+      `)
+      .order("expiry_date", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const mapped =
+      data?.map((service: any) => {
+        const expiryDate = new Date(service.expiry_date);
+        const today = new Date();
+
+        const daysLeft = Math.ceil(
+          (expiryDate.getTime() - today.getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+
+        let status = "Active";
+
+        if (daysLeft < 0) {
+          status = "Expired";
+        } else if (daysLeft <= 14) {
+          status = "Expiring Soon";
+        }
+
+        const initials =
+          service.clients?.company_name
+            ?.split(" ")
+            .map((w: string) => w[0])
+            .join("")
+            .toUpperCase() || "NA";
+
+        return {
+          id: service.id,
+          name: service.service_name,
+          type: service.service_type,
+          expires: expiryDate.toLocaleDateString(),
+          daysLeft,
+          status,
+          cost: `$${service.renewal_cost}`,
+          client: {
+            name: service.clients?.client_name || "",
+            company: service.clients?.company_name || "",
+            email: service.clients?.email || "",
+            initials,
+          },
+        };
+      }) || [];
+
+    setServices(mapped);
+  }
 
   const counts = useMemo(() => {
     const byStatus = services.reduce<Record<Status, number>>(
       (acc, service) => {
-        acc[service.status] += 1;
+        acc[service.status as Status] += 1;
         return acc;
       },
       {
@@ -30,24 +98,22 @@ export function ExpiryListPage() {
       "All Services": services.length,
       ...byStatus,
     };
-  }, []);
+  }, [services]);
 
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
-      // Status Filter
       const statusMatch =
         statusFilter === "All Services"
           ? true
           : service.status === statusFilter;
 
-      // Category Filter
       const categoryMatch =
         categoryFilter === "All"
           ? true
           : service.type === categoryFilter;
 
-      // Search Filter
       const query = searchQuery.toLowerCase();
+
       const searchMatch =
         service.name.toLowerCase().includes(query) ||
         service.client.name.toLowerCase().includes(query) ||
@@ -56,13 +122,12 @@ export function ExpiryListPage() {
 
       return statusMatch && categoryMatch && searchMatch;
     });
-  }, [statusFilter, categoryFilter, searchQuery]);
+  }, [services, statusFilter, categoryFilter, searchQuery]);
 
   return (
     <>
       <PageTitle page="Expiry List" />
 
-      {/* Status Filters */}
       <section className="flex flex-wrap gap-3">
         {statusOptions.map((status) => (
           <div
@@ -79,7 +144,6 @@ export function ExpiryListPage() {
         ))}
       </section>
 
-      {/* Search + Type Filters */}
       <section className="mt-6 flex items-center justify-between gap-5">
         <SearchBar
           placeholder="Search renewal services..."
@@ -111,7 +175,6 @@ export function ExpiryListPage() {
         </div>
       </section>
 
-      {/* Table */}
       <section className="mt-6">
         <DataTable services={filteredServices} />
       </section>
