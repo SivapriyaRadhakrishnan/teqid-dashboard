@@ -1,11 +1,23 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell } from "../icons";
+import { useAuth } from "../context/AuthContext";
 import type { Page } from "../types";
 import { SearchBar } from "./SearchBar";
 
 export function Header({ activePage }: { activePage: Page }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
+  const adminEmail = user?.email ?? "admin@teqid.com";
+  const initial = adminEmail.charAt(0).toUpperCase();
+
+  async function handleLogout() {
+    await signOut();
+    setOpen(false);
+    navigate("/login", { replace: true });
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -54,7 +66,7 @@ export function Header({ activePage }: { activePage: Page }) {
                 background: "linear-gradient(135deg, #0EA5E9, #0369A1)",
               }}
             >
-              A
+              {initial}
             </span>
 
             <span className="text-sm font-semibold text-text-primary">
@@ -73,7 +85,7 @@ export function Header({ activePage }: { activePage: Page }) {
                         "linear-gradient(135deg, #0EA5E9, #0369A1)",
                     }}
                   >
-                    A
+                    {initial}
                   </span>
 
                   <div>
@@ -81,7 +93,7 @@ export function Header({ activePage }: { activePage: Page }) {
                       Admin
                     </p>
                     <p className="text-xs text-slate-500">
-                      admin@teqid.com
+                      {adminEmail}
                     </p>
                   </div>
                 </div>
@@ -91,10 +103,7 @@ export function Header({ activePage }: { activePage: Page }) {
                 <button
                   type="button"
                   className="w-full px-4 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
-                  onClick={() => {
-                    console.log("Logout");
-                    setOpen(false);
-                  }}
+                  onClick={handleLogout}
                 >
                   Logout
                 </button>

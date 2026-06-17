@@ -16,7 +16,7 @@ export function AdminLayout() {
   const activePage = pageByPath[pathname] ?? "Dashboard";
 
   return (
-    <div className="min-h-screen bg-surface-page">
+    <div className="min-h-screen min-w-[1180px] bg-surface-page">
       <Sidebar navItems={navItems} />
       <div className="ml-[280px] min-h-screen">
         <Header activePage={activePage} />

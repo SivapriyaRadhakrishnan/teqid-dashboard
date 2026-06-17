@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { HelpCard } from "./HelpCard";
+import { useAuth } from "../context/AuthContext";
 import type { NavItem } from "../types";
 
 type SidebarProps = {
@@ -7,15 +8,19 @@ type SidebarProps = {
 };
 
 export function Sidebar({ navItems }: SidebarProps) {
+  const { user } = useAuth();
+  const adminEmail = user?.email ?? "admin@teqid.com";
+  const initial = adminEmail.charAt(0).toUpperCase();
+
   return (
     <aside className="fixed inset-y-0 left-0 flex w-[280px] flex-col bg-gradient-to-b from-sidebar-from to-sidebar-to px-5 py-6 text-white">
       <div className="flex items-center gap-4 rounded-[24px] border border-[rgba(255,255,255,0.06)] bg-white/[0.04] p-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[rgba(14,165,233,0.12)] text-lg font-bold text-brand-hover">
-          A
+          {initial}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">Admin Dashboard</p>
-          <p className="truncate text-xs text-white/45">admin@teqid.com</p>
+          <p className="truncate text-xs text-white/45">{adminEmail}</p>
         </div>
         <span className="h-2.5 w-2.5 rounded-full bg-state-success ring-4 ring-[rgba(16,185,129,0.15)]" />
       </div>
