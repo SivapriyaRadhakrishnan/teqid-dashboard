@@ -1,25 +1,45 @@
-const nodemailer = require("nodemailer");
+import dotenv from "dotenv";
+dotenv.config();
+
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: 465,
-  secure: true,
+  service: "gmail",
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
 
-async function sendExpiryEmail(serviceName) {
+export async function sendExpiryEmail(services) {
+  const html = `
+    <h2>Services Expiring Soon</h2>
+
+    <table border="1" cellpadding="10" cellspacing="0">
+      <tr>
+        <th>Service</th>
+        <th>Type</th>
+        <th>Expiry Date</th>
+      </tr>
+
+      ${services
+        .map(
+          (service) => `
+          <tr>
+            <td>${service.service_name}</td>
+            <td>${service.service_type}</td>
+            <td>${service.expiry_date}</td>
+          </tr>
+        `
+        )
+        .join("")}
+    </table>
+  `;
+
   await transporter.sendMail({
     from: process.env.SMTP_USER,
     to: "sivapriyamr4@gmail.com",
-    subject: "Service Expiry Alert",
-    html: `
-      <h2>Service Expiring Soon</h2>
-      <p>${serviceName} will expire soon.</p>
-    `,
+    subject: "Teqid Expiry Reminder",
+    html,
   });
 }
-
-module.exports = { sendExpiryEmail };
